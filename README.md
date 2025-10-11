@@ -14,7 +14,7 @@ Any changes you make to your deployed app will be automatically pushed to this r
 
 Your project is live at:
 
-**[https://vercel.com/kartiksingh14060-gmailcoms-projects/v0-digital-business-card-generator](https://vercel.com/kartiksingh14060-gmailcoms-projects/v0-digital-business-card-generator)**
+**[https://digital-business-card-generator.vercel.app/](https://digital-business-card-generator.vercel.app/)**
 
 ## Build your app
 
