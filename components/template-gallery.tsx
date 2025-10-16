@@ -19,9 +19,16 @@ interface Template {
 interface TemplateGalleryProps {
   selectedTemplate: string
   onSelectTemplate: (templateId: string) => void
+  userData?: {
+    name: string
+    title: string
+    company: string
+    email: string
+    phone: string
+  } // Optional user data prop
 }
 
-export function TemplateGallery({ selectedTemplate, onSelectTemplate }: TemplateGalleryProps) {
+export function TemplateGallery({ selectedTemplate, onSelectTemplate, userData }: TemplateGalleryProps) {
   const templates: Template[] = [
     {
       id: "modern",
@@ -107,11 +114,22 @@ export function TemplateGallery({ selectedTemplate, onSelectTemplate }: Template
 
   const categories = ["All", "Professional", "Creative", "Corporate", "Technology", "Luxury", "Startup", "Minimal"]
 
+  // Handle category filter (basic implementation)
+  const handleCategoryClick = (category: string) => {
+    console.log(`Selected category: ${category}`)
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
         {categories.map((category) => (
-          <Button key={category} variant="outline" size="sm" className="rounded-full bg-transparent">
+          <Button
+            key={category}
+            variant="outline"
+            size="sm"
+            className="rounded-full bg-transparent hover:bg-accent"
+            onClick={() => handleCategoryClick(category)}
+          >
             {category}
           </Button>
         ))}
@@ -129,11 +147,41 @@ export function TemplateGallery({ selectedTemplate, onSelectTemplate }: Template
             onClick={() => onSelectTemplate(template.id)}
           >
             <div className="relative overflow-hidden rounded-t-lg">
-              <img
-                src={template.preview || "/placeholder.svg"}
-                alt={template.name}
-                className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
-              />
+              <div className="relative w-full h-48">
+                <img
+                  src={template.preview || "/placeholder.svg"}
+                  alt={template.name}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "/placeholder.svg"
+                  }}
+                />
+                {/* Overlay for user data - No white background */}
+                {userData && (
+                  <div
+                    className="absolute inset-0 bg-transparent flex flex-col justify-between p-4 text-white"
+                    style={{
+                      background: "rgba(0, 0, 0, 0.3)", // Semi-transparent black overlay instead of white
+                      color: "#ffffff", // White text for contrast
+                    }}
+                  >
+                    <div className="flex justify-between">
+                      {template.isPremium && (
+                        <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black">
+                          Premium
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="text-left">
+                      <h3 className="font-bold text-lg">{userData.name || "Name"}</h3>
+                      <p className="text-sm">{userData.title || "Title"}</p>
+                      <p className="text-sm">{userData.company || "Company"}</p>
+                      <p className="text-xs">{userData.email || "email@example.com"}</p>
+                      <p className="text-xs">{userData.phone || "+1-123-456-7890"}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                 <div className="absolute bottom-4 left-4 right-4 flex justify-between items-end">
                   <div className="flex space-x-2">
@@ -141,14 +189,15 @@ export function TemplateGallery({ selectedTemplate, onSelectTemplate }: Template
                       size="sm"
                       variant="secondary"
                       className="bg-white/20 backdrop-blur-sm text-white border-white/20"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        console.log(`Preview clicked for ${template.name}`)
+                      }}
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Preview
                     </Button>
                   </div>
-                  {template.isPremium && (
-                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black">Premium</Badge>
-                  )}
                 </div>
               </div>
             </div>

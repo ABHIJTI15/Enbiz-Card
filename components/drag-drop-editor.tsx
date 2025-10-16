@@ -48,7 +48,6 @@ export function DragDropEditor({ elements, onUpdateElements }: DragDropEditorPro
     const [draggedElement] = newElements.splice(draggedIndex, 1)
     newElements.splice(targetIndex, 0, draggedElement)
 
-    // Update order values
     const updatedElements = newElements.map((el, index) => ({
       ...el,
       order: index,

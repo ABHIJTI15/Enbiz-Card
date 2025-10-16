@@ -1,20 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ArrowLeft, Download, Share2, QrCode, Edit3, Palette, Moon, Sun, Layout } from "lucide-react"
+import {
+  ArrowLeft,
+  Download,
+  Share2,
+  QrCode,
+  Edit3,
+  Palette,
+  Moon,
+  Sun,
+  Layout,
+} from "lucide-react"
 import Link from "next/link"
 import { CardPreview } from "@/components/card-preview"
-import { TemplateGallery } from "@/components/template-gallery"
-import { DragDropEditor } from "@/components/drag-drop-editor"
 import { AdvancedCustomization } from "@/components/advanced-customization"
 import { QRCodeGenerator } from "@/components/qr-code-generator"
 import { ExportOptions } from "@/components/export-options"
+import { TemplateGallery } from "@/components/template-gallery"
+import { DragDropEditor } from "@/components/drag-drop-editor"
 
 interface CardData {
   name: string
@@ -53,6 +63,11 @@ interface CardElement {
   label: string
   visible: boolean
   order: number
+}
+
+interface Template {
+  id: string
+  preview: string
 }
 
 export default function GeneratorPage() {
@@ -102,26 +117,42 @@ export default function GeneratorPage() {
     { id: "qr", type: "qr", label: "QR Code", visible: true, order: 9 },
   ])
 
-  const toggleTheme = () => {
-    setIsDark(!isDark)
-    document.documentElement.classList.toggle("dark")
-  }
-
-  const updateCardData = (field: keyof CardData, value: string | number) => {
-    setCardData((prev) => ({ ...prev, [field]: value }))
-  }
-
-  const colorPresets = [
-    { name: "Blue", primary: "#3b82f6", bg: "#ffffff", text: "#1f2937" },
-    { name: "Purple", primary: "#8b5cf6", bg: "#ffffff", text: "#1f2937" },
-    { name: "Green", primary: "#10b981", bg: "#ffffff", text: "#1f2937" },
-    { name: "Orange", primary: "#f59e0b", bg: "#ffffff", text: "#1f2937" },
-    { name: "Dark", primary: "#6366f1", bg: "#1f2937", text: "#ffffff" },
+  const templates: Template[] = [
+    { id: "modern", preview: "/modern-business-card.png" },
+    { id: "minimal", preview: "/minimal-business-card.png" },
+    { id: "creative", preview: "/creative-gradient-business-card.jpg" },
+    { id: "corporate", preview: "/corporate-business-card.jpg" },
+    { id: "tech", preview: "/tech-futuristic-business-card.jpg" },
+    { id: "artistic", preview: "/artistic-business-card.jpg" },
+    { id: "luxury", preview: "/luxury-gold-business-card.jpg" },
+    { id: "startup", preview: "/startup-business-card.jpg" },
   ]
+
+  const toggleTheme = useCallback(() => {
+    setIsDark((prev) => {
+      const newTheme = !prev
+      document.documentElement.classList.toggle("dark", newTheme)
+      return newTheme
+    })
+  }, [])
+
+  const updateCardData = useCallback((field: keyof CardData, value: string | number) => {
+    setCardData((prev) => {
+      let validatedValue = value
+      if (field === "name" || field === "title") {
+        validatedValue = (value as string).trim() || prev[field]
+      }
+      const newData = { ...prev, [field]: validatedValue }
+      return newData
+    })
+  }, [])
+
+  useEffect(() => {
+    console.log("cardData updated:", cardData)
+  }, [cardData])
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDark ? "dark" : ""}`}>
-      {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-background/80 border-b border-border/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -132,20 +163,32 @@ export default function GeneratorPage() {
                   Back to Home
                 </Button>
               </Link>
-              <div className="h-6 w-px bg-border hidden sm:block"></div>
+              <div className="h-6 w-px bg-border hidden sm:block" />
               <h1 className="text-xl font-semibold hidden sm:block">Card Generator</h1>
             </div>
             <div className="flex items-center space-x-2 sm:space-x-4">
-              <Button variant="ghost" size="icon" onClick={toggleTheme} className="rounded-full">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={toggleTheme}
+                className="rounded-full"
+                aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              >
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </Button>
-              <Button variant="outline" size="sm" className="hidden sm:flex bg-transparent">
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden sm:flex bg-transparent"
+                onClick={() => alert("Share functionality coming soon!")}
+              >
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </Button>
               <Button
                 size="sm"
                 className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white border-0"
+                onClick={() => alert("Export functionality coming soon!")}
               >
                 <Download className="w-4 h-4 mr-2" />
                 Export
@@ -155,34 +198,33 @@ export default function GeneratorPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Editor Panel */}
-          <div className="space-y-6">
+          <section className="space-y-6">
             <Card className="p-6 backdrop-blur-sm bg-card/50 border-border/50">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6">
-                  <TabsTrigger value="edit" className="flex items-center gap-1 text-xs">
+                  <TabsTrigger value="edit" className="flex items-center gap-1 text-xs cursor-pointer">
                     <Edit3 className="w-3 h-3" />
                     <span className="hidden sm:inline">Content</span>
                   </TabsTrigger>
-                  <TabsTrigger value="templates" className="flex items-center gap-1 text-xs">
+                  <TabsTrigger value="templates" className="flex items-center gap-1 text-xs cursor-pointer">
                     <Layout className="w-3 h-3" />
                     <span className="hidden sm:inline">Templates</span>
                   </TabsTrigger>
-                  <TabsTrigger value="layout" className="flex items-center gap-1 text-xs">
+                  <TabsTrigger value="layout" className="flex items-center gap-1 text-xs cursor-pointer">
                     <Layout className="w-3 h-3" />
                     <span className="hidden sm:inline">Layout</span>
                   </TabsTrigger>
-                  <TabsTrigger value="design" className="flex items-center gap-1 text-xs">
+                  <TabsTrigger value="design" className="flex items-center gap-1 text-xs cursor-pointer">
                     <Palette className="w-3 h-3" />
                     <span className="hidden sm:inline">Design</span>
                   </TabsTrigger>
-                  <TabsTrigger value="qr" className="flex items-center gap-1 text-xs">
+                  <TabsTrigger value="qr" className="flex items-center gap-1 text-xs cursor-pointer">
                     <QrCode className="w-3 h-3" />
                     <span className="hidden sm:inline">QR</span>
                   </TabsTrigger>
-                  <TabsTrigger value="export" className="flex items-center gap-1 text-xs">
+                  <TabsTrigger value="export" className="flex items-center gap-1 text-xs cursor-pointer">
                     <Download className="w-3 h-3" />
                     <span className="hidden sm:inline">Export</span>
                   </TabsTrigger>
@@ -197,6 +239,9 @@ export default function GeneratorPage() {
                         value={cardData.name}
                         onChange={(e) => updateCardData("name", e.target.value)}
                         placeholder="Enter your full name"
+                        required
+                        aria-required="true"
+                        className="cursor-text"
                       />
                     </div>
                     <div className="space-y-2">
@@ -206,6 +251,9 @@ export default function GeneratorPage() {
                         value={cardData.title}
                         onChange={(e) => updateCardData("title", e.target.value)}
                         placeholder="Your job title"
+                        required
+                        aria-required="true"
+                        className="cursor-text"
                       />
                     </div>
                   </div>
@@ -217,6 +265,7 @@ export default function GeneratorPage() {
                       value={cardData.company}
                       onChange={(e) => updateCardData("company", e.target.value)}
                       placeholder="Company name"
+                      className="cursor-text"
                     />
                   </div>
 
@@ -228,6 +277,7 @@ export default function GeneratorPage() {
                       onChange={(e) => updateCardData("bio", e.target.value)}
                       placeholder="Brief description about yourself"
                       rows={3}
+                      className="cursor-text"
                     />
                   </div>
 
@@ -240,15 +290,18 @@ export default function GeneratorPage() {
                         value={cardData.email}
                         onChange={(e) => updateCardData("email", e.target.value)}
                         placeholder="your@email.com"
+                        className="cursor-text"
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="phone">Phone</Label>
                       <Input
                         id="phone"
+                        type="tel"
                         value={cardData.phone}
                         onChange={(e) => updateCardData("phone", e.target.value)}
                         placeholder="+1 (555) 123-4567"
+                        className="cursor-text"
                       />
                     </div>
                   </div>
@@ -257,9 +310,11 @@ export default function GeneratorPage() {
                     <Label htmlFor="website">Website</Label>
                     <Input
                       id="website"
+                      type="url"
                       value={cardData.website}
                       onChange={(e) => updateCardData("website", e.target.value)}
-                      placeholder="yourwebsite.com"
+                      placeholder="https://yourwebsite.com"
+                      className="cursor-text"
                     />
                   </div>
 
@@ -275,6 +330,7 @@ export default function GeneratorPage() {
                           value={cardData.linkedin}
                           onChange={(e) => updateCardData("linkedin", e.target.value)}
                           placeholder="username"
+                          className="cursor-text"
                         />
                       </div>
                       <div className="space-y-2">
@@ -286,6 +342,7 @@ export default function GeneratorPage() {
                           value={cardData.twitter}
                           onChange={(e) => updateCardData("twitter", e.target.value)}
                           placeholder="@username"
+                          className="cursor-text"
                         />
                       </div>
                       <div className="space-y-2">
@@ -297,6 +354,7 @@ export default function GeneratorPage() {
                           value={cardData.instagram}
                           onChange={(e) => updateCardData("instagram", e.target.value)}
                           placeholder="username"
+                          className="cursor-text"
                         />
                       </div>
                     </div>
@@ -315,7 +373,10 @@ export default function GeneratorPage() {
                 </TabsContent>
 
                 <TabsContent value="design" className="mt-6">
-                  <AdvancedCustomization cardData={cardData} onUpdateCardData={updateCardData} />
+                  <AdvancedCustomization
+                    cardData={cardData}
+                    onUpdateCardData={updateCardData}
+                  />
                 </TabsContent>
 
                 <TabsContent value="qr" className="mt-6">
@@ -327,10 +388,9 @@ export default function GeneratorPage() {
                 </TabsContent>
               </Tabs>
             </Card>
-          </div>
+          </section>
 
-          {/* Preview Panel */}
-          <div className="lg:block">
+          <section className="lg:block">
             <div className="sticky top-24">
               <Card className="p-6 backdrop-blur-sm bg-card/50 border-border/50">
                 <div className="flex items-center justify-between mb-4">
@@ -340,12 +400,12 @@ export default function GeneratorPage() {
                     QR Code
                   </Button>
                 </div>
-                <CardPreview cardData={cardData} />
+                <CardPreview cardData={cardData} templates={templates} />
               </Card>
             </div>
-          </div>
+          </section>
         </div>
-      </div>
+      </main>
     </div>
   )
 }
